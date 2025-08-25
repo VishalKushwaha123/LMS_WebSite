@@ -14,8 +14,7 @@ app.get("/", (req, res) => res.send("Hello from server"));
 app.post("/clerk", express.json(), clerkWebhooks);
 
 // listen
-const PORT = process.env.PORT;
-app.listen(PORT, async () => {
-  connectDB(); // connect to MongoDB when server starts
-  console.log(`✅ Server is running on port ${PORT}`);
+export default app.listen(process.env.PORT, () => {
+  console.log(`Server is running on port ${process.env.PORT}`);
+  connectDB();
 });
