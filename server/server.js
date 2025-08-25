@@ -15,10 +15,6 @@ app.use(cors());
 
 //Routes
 app.get("/", (req, res) => res.send("Hello from server"));
-// Routes
-app.post("/clerk", express.raw({ type: "application/json" }), clerkWebhooks);
+app.post("/clerk", express.json(), clerkWebhooks);
 
-
-//port
-const PORT = process.env.PORT;
-app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+export default app;
