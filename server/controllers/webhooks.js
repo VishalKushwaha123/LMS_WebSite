@@ -5,7 +5,6 @@ export const clerkWebhooks = async (req, res) => {
   try {
     const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
 
-    // verify using raw body (Buffer)
     const payloadString = req.body.toString("utf8");
     const headers = {
       "svix-id": req.headers["svix-id"],
@@ -16,6 +15,7 @@ export const clerkWebhooks = async (req, res) => {
     whook.verify(payloadString, headers);
 
     const { data, type } = JSON.parse(payloadString);
+    console.log("Received Clerk event:", type, data.id);
 
     switch (type) {
       case "user.created":

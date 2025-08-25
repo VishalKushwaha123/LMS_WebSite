@@ -4,17 +4,16 @@ import "dotenv/config";
 import connectDB from "./configs/mongodb.js";
 import { clerkWebhooks } from "./controllers/webhooks.js";
 
-//initilize Express
 const app = express();
 
-//connect to database
-await connectDB();
-
-//middleware
+// middleware
 app.use(cors());
 
-//Routes
+// routes
 app.get("/", (req, res) => res.send("Hello from server"));
-app.post("/clerk", express.json(), clerkWebhooks);
+app.post("/clerk", express.raw({ type: "application/json" }), clerkWebhooks);
+
+// connect to db
+await connectDB();
 
 export default app;
