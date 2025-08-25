@@ -12,9 +12,6 @@ app.use(cors());
 // routes
 app.get("/", (req, res) => res.send("Hello from server"));
 app.post("/clerk", express.json(), clerkWebhooks);
-
+connectDB();
 // listen
-export default app.listen(process.env.PORT, () => {
-  console.log(`Server is running on port ${process.env.PORT}`);
-  connectDB();
-});
+export default app;
