@@ -11,9 +11,11 @@ app.use(cors());
 
 // routes
 app.get("/", (req, res) => res.send("Hello from server"));
-app.post("/clerk", express.raw({ type: "application/json" }), clerkWebhooks);
+app.post("/clerk", express.json(), clerkWebhooks);
 
-// connect to db
-await connectDB();
-
-export default app;
+// listen
+const PORT = process.env.PORT;
+app.listen(PORT, async () => {
+  connectDB(); // connect to MongoDB when server starts
+  console.log(`✅ Server is running on port ${PORT}`);
+});
