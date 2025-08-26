@@ -8,10 +8,11 @@ const app = express();
 
 // middleware
 app.use(cors());
+app.use(express.json());
 
 // routes
 app.get("/", (req, res) => res.send("Hello from server"));
-app.post("/clerk", express.json(), clerkWebhooks);
+app.post("/clerk", clerkWebhooks);
 connectDB();
 // listen
 const PORT = process.env.PORT || 5000;
