@@ -3,52 +3,45 @@ import User from "../models/User.js";
 
 export const clerkWebhooks = async (req, res) => {
   try {
-    const webhook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
-    // Verify webhook
-    await webhook.verify(JSON.stringify(req.body), {
+    const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
+
+    const payloadString = req.body.toString("utf8"); // raw body
+    const headers = {
       "svix-id": req.headers["svix-id"],
       "svix-timestamp": req.headers["svix-timestamp"],
       "svix-signature": req.headers["svix-signature"],
-    });
-    const { data, type } = req.body;
+    };
+
+    whook.verify(payloadString, headers); // throws if invalid
+
+    const { data, type } = JSON.parse(payloadString);
+    console.log("📩 Received Clerk event:", type, data.id);
+
     switch (type) {
-      case "user.created": {
-        // Handle user created event
-        const userData = {
-          _id: data.id,
-          email: data.email_addresses[0].email_address,
-          name: data.first_name + " " + data.last_name,
-          imageUrl: data.image_url,
-          // Add any other relevant user fields
-        };
-        await User.create(userData);
-        res.json({ message: "User created successfully", userData });
+      case "user.created":
+      case "user.updated":
+        await User.findByIdAndUpdate(
+          data.id,
+          {
+            email: data.email_addresses[0].email_address,
+            name: `${data.first_name || ""} ${data.last_name || ""}`.trim(),
+            imageUrl: data.image_url,
+          },
+          { upsert: true, new: true } // create if not exists
+        );
         break;
-      }
-      case "user.updated": {
-        // Handle user updated event
-        const userData = {
-          email: data.email_addresses[0].email_address,
-          name: data.first_name + " " + data.last_name,
-          imageUrl: data.image_url,
-        };
-        await User.findByIdAndUpdate(data.id, userData);
-        res.json({ message: "User updated successfully", userData });
-        break;
-      }
-      case "user.deleted": {
-        // Handle user deleted event
+
+      case "user.deleted":
         await User.findByIdAndDelete(data.id);
-        res.json({ message: "User deleted successfully" });
         break;
-      }
-      default: {
-        console.warn("Unhandled webhook event type:", type);
-        break;
-      }
+
+      default:
+        console.log("ℹ️ Unhandled event type:", type);
     }
+
+    res.status(200).json({ success: true });
   } catch (error) {
-    console.error("Error registering webhook:", error);
-    res.status(500).json({ message: "Internal server error Webhook" });
+    console.error("❌ Webhook error:", error.message);
+    res.status(400).json({ success: false, error: error.message });
   }
 };
