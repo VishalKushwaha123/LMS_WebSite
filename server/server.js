@@ -12,7 +12,7 @@ app.use(express.json());
 
 // routes
 app.get("/", (req, res) => res.send("Hello from server"));
-app.post("/clerk", clerkWebhooks);
+app.post("/clerk", express.raw({ type: "application/json" }), clerkWebhooks);
 
 // connect to db
 connectDB();
