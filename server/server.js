@@ -15,7 +15,5 @@ app.get("/", (req, res) => res.send("Hello from server"));
 app.post("/clerk", clerkWebhooks);
 connectDB();
 // listen
-const PORT = process.env.PORT || 5000;
-app.listen(process.env.PORT, () =>
-  console.log(`Server running on port ${PORT}`)
-);
+
+export default app;
