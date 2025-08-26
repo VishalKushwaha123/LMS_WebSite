@@ -12,7 +12,9 @@ app.use(express.json());
 
 // routes
 app.get("/", (req, res) => res.send("Hello from server"));
-app.post("/clerk", clerkWebhooks);
+import bodyParser from "body-parser";
+app.post("/clerk", bodyParser.raw({ type: "application/json" }), clerkWebhooks);
+
 // listen
 const PORT = process.env.PORT || 5000;
 app.listen(process.env.PORT, () => {
