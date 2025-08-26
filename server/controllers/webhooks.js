@@ -4,70 +4,51 @@ import User from "../models/User.js";
 export const clerkWebhooks = async (req, res) => {
   try {
     const webhook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
-
-    // Clerk needs raw body, not parsed JSON
-    const payloadString = req.body.toString("utf8");
-    const headers = {
+    // Verify webhook
+    await webhook.verify(JSON.stringify(req.body), {
       "svix-id": req.headers["svix-id"],
       "svix-timestamp": req.headers["svix-timestamp"],
       "svix-signature": req.headers["svix-signature"],
-    };
-
-    // Verify event
-    const evt = webhook.verify(payloadString, headers);
-    const { data, type } = evt;
-
+    });
+    const { data, type } = req.body;
     switch (type) {
       case "user.created": {
+        // Handle user created event
         const userData = {
-          _id: data.id, // Clerk user ID as primary key
-          email: data.email_addresses[0]?.email_address || "",
-          name: `${data.first_name || ""} ${data.last_name || ""}`.trim(),
+          _id: data.id,
+          email: data.email_addresses[0].email_address,
+          name: data.first_name + " " + data.last_name,
           imageUrl: data.image_url,
+          // Add any other relevant user fields
         };
-
-        try {
-          await User.create(userData);
-          return res.json({
-            message: "✅ User created successfully",
-            userData,
-          });
-        } catch (err) {
-          // Handle duplicate user gracefully
-          if (err.code === 11000) {
-            return res
-              .status(200)
-              .json({ message: "⚠️ User already exists", userData });
-          }
-          throw err;
-        }
+        await User.create(userData);
+        res.json({ message: "User created successfully", userData });
+        break;
       }
-
       case "user.updated": {
+        // Handle user updated event
         const userData = {
-          email: data.email_addresses[0]?.email_address || "",
-          name: `${data.first_name || ""} ${data.last_name || ""}`.trim(),
+          email: data.email_addresses[0].email_address,
+          name: data.first_name + " " + data.last_name,
           imageUrl: data.image_url,
         };
-
-        await User.findByIdAndUpdate(data.id, userData, {
-          upsert: true, // create if not exists
-          new: true,
-        });
-        return res.json({ message: "✅ User updated successfully", userData });
+        await User.findByIdAndUpdate(data.id, userData);
+        res.json({ message: "User updated successfully", userData });
+        break;
       }
-
       case "user.deleted": {
+        // Handle user deleted event
         await User.findByIdAndDelete(data.id);
-        return res.json({ message: "🗑️ User deleted successfully" });
+        res.json({ message: "User deleted successfully" });
+        break;
       }
-
-      default:
-        console.warn("⚠️ Unhandled webhook event type:", type);
-        return res.status(200).end();
+      default: {
+        console.warn("Unhandled webhook event type:", type);
+        break;
+      }
     }
   } catch (error) {
-    console.error("❌ Webhook error:", error);
-    return res.status(500).json({ message: "Internal server error Webhook" });
+    console.error("Error registering webhook:", error);
+    res.status(500).json({ message: "Internal server error Webhook" });
   }
 };
