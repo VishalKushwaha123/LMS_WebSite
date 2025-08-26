@@ -5,6 +5,7 @@ export const clerkWebhooks = async (req, res) => {
   try {
     const webhook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
 
+    // Clerk needs raw body, not parsed JSON
     const payloadString = req.body.toString("utf8");
     const headers = {
       "svix-id": req.headers["svix-id"],
@@ -12,43 +13,57 @@ export const clerkWebhooks = async (req, res) => {
       "svix-signature": req.headers["svix-signature"],
     };
 
+    // Verify event
     const evt = webhook.verify(payloadString, headers);
     const { data, type } = evt;
 
     switch (type) {
       case "user.created": {
         const userData = {
-          _id: data.id,
-          email: data.email_addresses[0].email_address,
-          name: `${data.first_name} ${data.last_name}`.trim(),
+          _id: data.id, // Clerk user ID as primary key
+          email: data.email_addresses[0]?.email_address || "",
+          name: `${data.first_name || ""} ${data.last_name || ""}`.trim(),
           imageUrl: data.image_url,
         };
 
-        await User.create(userData);
-        return res.json({ message: "User created successfully", userData });
+        try {
+          await User.create(userData);
+          return res.json({
+            message: "✅ User created successfully",
+            userData,
+          });
+        } catch (err) {
+          // Handle duplicate user gracefully
+          if (err.code === 11000) {
+            return res
+              .status(200)
+              .json({ message: "⚠️ User already exists", userData });
+          }
+          throw err;
+        }
       }
 
       case "user.updated": {
         const userData = {
-          email: data.email_addresses[0].email_address,
-          name: `${data.first_name} ${data.last_name}`.trim(),
+          email: data.email_addresses[0]?.email_address || "",
+          name: `${data.first_name || ""} ${data.last_name || ""}`.trim(),
           imageUrl: data.image_url,
         };
 
         await User.findByIdAndUpdate(data.id, userData, {
-          upsert: true,
+          upsert: true, // create if not exists
           new: true,
         });
-        return res.json({ message: "User updated successfully", userData });
+        return res.json({ message: "✅ User updated successfully", userData });
       }
 
       case "user.deleted": {
         await User.findByIdAndDelete(data.id);
-        return res.json({ message: "User deleted successfully" });
+        return res.json({ message: "🗑️ User deleted successfully" });
       }
 
       default:
-        console.warn("Unhandled webhook event type:", type);
+        console.warn("⚠️ Unhandled webhook event type:", type);
         return res.status(200).end();
     }
   } catch (error) {
