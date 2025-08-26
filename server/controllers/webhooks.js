@@ -20,33 +20,31 @@ export const clerkWebhooks = async (req, res) => {
           imageUrl: data.image_url,
         };
         await User.create(userData);
-        res.json({ message: "User created successfully", userData });
+        res.json({});
         break;
       }
       case "user.updated": {
         // Handle user updated event
         const userData = {
-          email: data.email_addresses[0].email_address,
+          email: data.email_address[0].email_address,
           name: data.first_name + " " + data.last_name,
           imageUrl: data.image_url,
         };
         await User.findByIdAndUpdate(data.id, userData);
-        res.json({ message: "User updated successfully", userData });
+        res.json({});
         break;
       }
       case "user.deleted": {
         // Handle user deleted event
         await User.findByIdAndDelete(data.id);
-        res.json({ message: "User deleted successfully" });
+        res.json({});
         break;
       }
       default: {
-        console.warn("Unhandled webhook event type:", type);
         break;
       }
     }
   } catch (error) {
-    console.error("Error registering webhook:", error);
-    res.status(500).json({ message: "Internal server error Webhook" });
+    res.json({success: false,message:error.message});
   }
 };
