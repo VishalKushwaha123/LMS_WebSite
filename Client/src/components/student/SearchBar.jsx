@@ -1,25 +1,38 @@
-import React, { useState } from 'react'
-import { assets } from '../../assets/assets'
-import { useNavigate } from 'react-router-dom'
-
+import React, { useState } from "react";
+import { assets } from "../../assets/assets";
+import {data, useNavigate} from "react-router-dom"
 const SearchBar = ({data}) => {
 
+
   const navigate = useNavigate()
-  const [input , setInput] = useState(data ? data : "")
+  const [input, setInput] = useState(data ? data : '');
 
   const onSearchHandler = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     navigate('/course-list/' + input)
   }
-  return (
 
-      <form onSubmit={onSearchHandler} className='flex items-center max-w-xl md:h-14 h-12 bg-white rounded border border-gray-300'>
-        <img src={assets.search_icon} alt="search_icon" className='md:w-auto w-10 px-3' />
-        <input onChange={(e) => setInput(e.target.value)} value={input} type="text" placeholder="Search for courses" className='border border-gray-300 rounded-md py-2 px-4 md:w-auto w-full' />
-        <button type="submit" className='bg-blue-600 text-white px-5 py-2 rounded-md ml-2'>Search</button>
-      </form>
-   
-  )
-}
+	return (
+		<form onSubmit={onSearchHandler} className="max-w-xl w-full md:h-14 h-12 flex items-center bg-white border border-gray-500/20 rounded">
+			<img
+				src={assets.search_icon}
+				alt="search icon"
+				className="md:w-auto w-10 px-3"
+			/>
+			<input
+        onChange={e => setInput(e.target.value)} value={input}
+				type="text"
+				placeholder="Search for courses"
+				className="w-full h-full outline-none text-gray-500/80"
+			/>
+			<button
+				type="submit"
+				className="bg-blue-600 rounded text-white md:px-10 px-7 md:py-3 py-2 mx-1"
+			>
+				Search
+			</button>
+		</form>
+	);
+};
 
-export default SearchBar
+export default SearchBar;
