@@ -8,7 +8,7 @@ import { data } from "react-router-dom";
 
 
 
-const MyEnrollMents = () => {
+const MyEnrollMent = () => {
 	const {
 		navigate,
 		enrolledCourses,
@@ -133,4 +133,4 @@ const MyEnrollMents = () => {
 	);
 };
 
-export default MyEnrollMents;
+export default MyEnrollMent;
