@@ -24,7 +24,7 @@ app.use(clerkMiddleware());
 
 // Routes
 app.get("/", (req, res) => {
-  res.send("Edemy API is working fine!");
+  res.send(" API is working fine!");
 });
 app.post("/clerk", express.json(), clerkWebhooks);
 app.use("/api/educator", express.json(), educatorRouter);
